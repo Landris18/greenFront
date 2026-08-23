@@ -12,6 +12,7 @@ import Stack from '@mui/material/Stack';
 import TextField from '@mui/material/TextField';
 import Typography from '@mui/material/Typography';
 
+import { EnergyModelCard } from '../energy-model-card';
 import {
     settingsService,
     type GreenConfigPayload,
@@ -125,6 +126,7 @@ export function SettingsView() {
             created_by: _createdBy,
             created_at: _createdAt,
             updated_at: _updatedAt,
+            calibration_note: _calibrationNote,
             ...payload
         } = data as GreenConfig;
         setForm(payload);
@@ -274,6 +276,10 @@ export function SettingsView() {
                             </Stack>
                         </CardContent>
                     </Card>
+                </Grid>
+
+                <Grid size={12}>
+                    <EnergyModelCard config={data as GreenConfig} />
                 </Grid>
             </Grid>
         </Page>

@@ -3,7 +3,13 @@ import type { GreenConfig } from 'src/shared/types/api';
 
 export type GreenConfigPayload = Omit<
     GreenConfig,
-    'id' | 'version' | 'is_active' | 'created_by' | 'created_at' | 'updated_at'
+    | 'id'
+    | 'version'
+    | 'is_active'
+    | 'created_by'
+    | 'created_at'
+    | 'updated_at'
+    | 'calibration_note'
 >;
 
 export const settingsService = {

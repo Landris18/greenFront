@@ -349,5 +349,6 @@ export interface GreenConfig {
     threshold_memory_high_percent: number;
     live_retention_minutes: number;
     persist_every_n_ticks: number;
+    calibration_note: string | null;
 }
 
