@@ -12,21 +12,22 @@ git clone https://github.com/Landris18/greenFront.git
 cd greenBack && ./scripts/initialiser.sh
 ```
 
-## Cinq écrans
+## Six écrans
 
 | Route | Écran | Contenu |
-|---|---|---|
+| --- | --- | --- |
 | `/` | Tableau de bord | KPI, historique de consommation, priorités, répartition par projet |
 | `/conteneurs` | Conteneurs | projets auto-détectés, groupés, valeurs vivantes, tri et recherche |
 | `/comparaison` | Comparaison | courbes cumulées à la seconde pour deux projets, plus l'écart mesuré |
 | `/optimiser/:id` | Optimisation | recommandations et diffs applicables au `Dockerfile` / compose |
+| `/kanban/:id` | Kanban | recommandations d'un projet en colonnes par statut, glisser-déposer |
 | `/parametres` | Paramètres | seuils et facteur d'émission, réservé aux administrateurs |
 
 Plus `/conteneurs/:id` pour le détail d'un conteneur.
 
 ## Organisation
 
-```
+```txt
 src/
   app/providers/{auth,query}/ , app/router/{routes.tsx,guards/}
   features/{auth,dashboard,projects,live,optimize,containers,settings}/
