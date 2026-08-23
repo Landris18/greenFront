@@ -8,6 +8,10 @@ import 'src/styles/global.css';
 
 const router = createBrowserRouter(routes);
 
+// Ce chargement a reussi : si un futur deploiement casse un chunk, on doit pouvoir
+// retenter un rechargement automatique (voir route-error-boundary.tsx).
+sessionStorage.removeItem('greensi:rechargement-chunk');
+
 createRoot(document.getElementById('root') as HTMLElement).render(
     <StrictMode>
         <AppProvider>

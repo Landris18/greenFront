@@ -3,6 +3,7 @@ import { Navigate, type RouteObject } from 'react-router-dom';
 
 import { AuthGuard } from './guards/auth-guard';
 import { GuestGuard } from './guards/guest-guard';
+import { RouteErrorBoundary } from './route-error-boundary';
 import { DashboardLayout } from 'src/layouts/dashboard/layout';
 import { LoadingScreen } from 'src/shared/components/loading-screen/loading-screen';
 
@@ -25,6 +26,7 @@ export const routes: RouteObject[] = [
                 </Suspense>
             </GuestGuard>
         ),
+        errorElement: <RouteErrorBoundary />,
     },
     {
         path: '/',
@@ -33,6 +35,7 @@ export const routes: RouteObject[] = [
                 <DashboardLayout />
             </AuthGuard>
         ),
+        errorElement: <RouteErrorBoundary />,
         children: [
             { index: true, element: <DashboardPage /> },
             { path: 'conteneurs', element: <ProjectsPage /> },
