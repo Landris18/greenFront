@@ -11,6 +11,7 @@ const LoginPage = lazy(() => import('src/pages/login'));
 const DashboardPage = lazy(() => import('src/pages/dashboard'));
 const ProjectsPage = lazy(() => import('src/pages/projects'));
 const LivePage = lazy(() => import('src/pages/live'));
+const BilanPage = lazy(() => import('src/pages/bilan'));
 const OptimizePage = lazy(() => import('src/pages/optimize'));
 const KanbanPage = lazy(() => import('src/pages/kanban'));
 const ContainerDetailPage = lazy(() => import('src/pages/container-detail'));
@@ -40,6 +41,7 @@ export const routes: RouteObject[] = [
             { index: true, element: <DashboardPage /> },
             { path: 'conteneurs', element: <ProjectsPage /> },
             { path: 'conteneurs/:containerId', element: <ContainerDetailPage /> },
+            { path: 'bilan', element: <BilanPage /> },
             { path: 'comparaison', element: <LivePage /> },
             { path: 'optimiser', element: <OptimizePage /> },
             { path: 'optimiser/:projectId', element: <OptimizePage /> },

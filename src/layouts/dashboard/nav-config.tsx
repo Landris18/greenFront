@@ -10,6 +10,7 @@ export interface NavItem {
 export const navItems: NavItem[] = [
     { title: 'Tableau de bord', path: '/', icon: 'solar:widget-5-bold-duotone' },
     { title: 'Conteneurs', path: '/conteneurs', icon: 'solar:box-bold-duotone' },
+    { title: 'Bilan énergétique', path: '/bilan', icon: 'solar:bolt-bold-duotone' },
     { title: 'Comparaison', path: '/comparaison', icon: 'solar:chart-square-bold-duotone' },
     { title: 'Optimisation', path: '/optimiser', icon: 'solar:lightbulb-bold-duotone' },
     { title: 'Kanban', path: '/kanban', icon: 'solar:clipboard-list-bold-duotone' },

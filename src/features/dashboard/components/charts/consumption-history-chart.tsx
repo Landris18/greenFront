@@ -1,14 +1,20 @@
 import { Chart } from 'src/shared/components/chart/chart';
 import { mergeChartOptions } from 'src/shared/components/chart/use-chart';
 import { SectionCard } from 'src/shared/components/section-card/section-card';
-import type { ProjectEnergySeries } from 'src/shared/types/api';
-import { echelleEnergie } from 'src/shared/utils/format';
+import type { EnergyPoint, ProjectEnergySeries } from 'src/shared/types/api';
+import { echelleCarbone, echelleEnergie } from 'src/shared/utils/format';
 import { chartPalette, surface } from 'src/styles/theme/tokens';
+
+const GRAMS_PER_KG = 1000;
+
+type Metric = 'energy' | 'co2';
 
 type Props = {
     series: ProjectEnergySeries[];
     loading?: boolean;
     subtitle?: string;
+    title?: string;
+    metric?: Metric;
 };
 
 const MAX_SERIES = 6;
@@ -16,10 +22,22 @@ const AUTRES = 'Autres projets';
 
 type Serie = { name: string; data: number[] };
 
-function alignerSurLesMemesDates(series: ProjectEnergySeries[]): {
+const VALEUR_PAR_METRIQUE: Record<Metric, (point: EnergyPoint) => number> = {
+    energy: (point) => point.energy_kwh,
+    // co2_kg est en kilogrammes ; on convertit en grammes ici pour que echelleCarbone (qui
+    // attend des grammes) et le reste du graphique travaillent dans la meme unite que
+    // formatCarbon ailleurs dans l'app.
+    co2: (point) => point.co2_kg * GRAMS_PER_KG,
+};
+
+function alignerSurLesMemesDates(
+    series: ProjectEnergySeries[],
+    metric: Metric
+): {
     dates: number[];
     series: Serie[];
 } {
+    const valeurDe = VALEUR_PAR_METRIQUE[metric];
     const dates = [
         ...new Set(
             series.flatMap((item) => item.points.map((point) => new Date(point.timestamp).getTime()))
@@ -28,7 +46,7 @@ function alignerSurLesMemesDates(series: ProjectEnergySeries[]): {
 
     const alignees = series.map((item) => {
         const parDate = new Map(
-            item.points.map((point) => [new Date(point.timestamp).getTime(), point.energy_kwh])
+            item.points.map((point) => [new Date(point.timestamp).getTime(), valeurDe(point)])
         );
         return { name: item.project_name, data: dates.map((date) => parDate.get(date) ?? 0) };
     });
@@ -57,15 +75,21 @@ function replierLaQueue(series: Serie[], dates: number[]): Serie[] {
     ];
 }
 
-export function ConsumptionHistoryChart({ series, loading, subtitle }: Props) {
-    const { dates, series: alignees } = alignerSurLesMemesDates(series);
+export function ConsumptionHistoryChart({
+    series,
+    loading,
+    subtitle,
+    title = 'Évolution de la consommation',
+    metric = 'energy',
+}: Props) {
+    const { dates, series: alignees } = alignerSurLesMemesDates(series, metric);
     const visibles = replierLaQueue(alignees, dates);
 
     const totauxParDate = dates.map((_, index) =>
         visibles.reduce((somme, serie) => somme + serie.data[index], 0)
     );
     const maximum = Math.max(0, ...totauxParDate);
-    const echelle = echelleEnergie(maximum);
+    const echelle = metric === 'co2' ? echelleCarbone(maximum) : echelleEnergie(maximum);
     const decimalesAxe = maximum * echelle.facteur >= 10 ? 0 : echelle.decimales;
 
     const options = mergeChartOptions({
@@ -116,7 +140,7 @@ export function ConsumptionHistoryChart({ series, loading, subtitle }: Props) {
     }));
 
     return (
-        <SectionCard title="Évolution de la consommation" subtitle={subtitle}>
+        <SectionCard title={title} subtitle={subtitle}>
             <Chart
                 type="bar"
                 series={donnees}
