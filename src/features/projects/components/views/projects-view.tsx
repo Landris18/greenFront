@@ -10,6 +10,7 @@ import Card from '@mui/material/Card';
 import Chip from '@mui/material/Chip';
 import Collapse from '@mui/material/Collapse';
 import Divider from '@mui/material/Divider';
+import Grid from '@mui/material/Grid';
 import InputAdornment from '@mui/material/InputAdornment';
 import LinearProgress from '@mui/material/LinearProgress';
 import Stack from '@mui/material/Stack';
@@ -27,6 +28,7 @@ import { alpha } from '@mui/material/styles';
 import { containerService } from 'src/features/containers/api/container-service';
 import { projectService } from 'src/features/projects/api/project-service';
 import { EmptyContent } from 'src/shared/components/empty-content/empty-content';
+import { KpiCard } from 'src/shared/components/kpi-card/kpi-card';
 import { MiniBar } from 'src/shared/components/mini-bar/mini-bar';
 import { Page } from 'src/shared/components/page/page';
 import { ContainerStatusChip } from 'src/shared/components/status-chip/status-chip';
@@ -37,6 +39,7 @@ import {
     formatDuration,
     formatEnergy,
     formatNumber,
+    formatPercent,
     formatWatts,
 } from 'src/shared/utils/format';
 import { surface } from 'src/styles/theme/tokens';
@@ -607,6 +610,25 @@ export function ProjectsView() {
         };
     }, [projets, terme, parProjet]);
 
+    const { cpuMoyen, memoireUtilisee, capaciteMemoire } = useMemo(() => {
+        const items = projets ?? [];
+        // Capacite memoire de l'hote : dedupliquee par host.id pour ne pas multiplier la
+        // capacite par le nombre de projets si plusieurs projets partagent le meme hote.
+        const hotesUniques = new Map<number, number>();
+        for (const item of items) {
+            if (item.project.host) {
+                hotesUniques.set(item.project.host.id, item.project.host.total_memory_bytes);
+            }
+        }
+        return {
+            // cpu_percent_of_host est deja relatif a l'hote : la somme represente le total
+            // CPU hote consomme par les conteneurs supervises, pas une moyenne de pourcentages.
+            cpuMoyen: items.reduce((somme, item) => somme + item.cpu_percent_of_host, 0),
+            memoireUtilisee: items.reduce((somme, item) => somme + item.memory_bytes, 0),
+            capaciteMemoire: [...hotesUniques.values()].reduce((somme, valeur) => somme + valeur, 0) || null,
+        };
+    }, [projets]);
+
     const estOuvert = (summary: ProjectSummary) =>
         ouverture[summary.project.id] ?? (summary.running_count > 0 || terme !== '');
 
@@ -672,6 +694,33 @@ export function ProjectsView() {
             }
         >
             <Stack spacing={2}>
+                <Grid container spacing={2.5}>
+                    <Grid size={{ xs: 12, sm: 6 }}>
+                        <KpiCard
+                            title="CPU moyen"
+                            value={formatPercent(cpuMoyen).replace(' %', '')}
+                            unit="%"
+                            icon="solar:cpu-bolt-bold-duotone"
+                            accent="containers"
+                            caption="Cumul de l'usage CPU de tous les projets, en % de l'hôte"
+                        />
+                    </Grid>
+                    <Grid size={{ xs: 12, sm: 6 }}>
+                        <KpiCard
+                            title="RAM utilisée"
+                            value={formatBytes(memoireUtilisee).value}
+                            unit={formatBytes(memoireUtilisee).unit}
+                            icon="solar:server-bold-duotone"
+                            accent="overhead"
+                            caption={
+                                capaciteMemoire
+                                    ? `${formatPercent((memoireUtilisee / capaciteMemoire) * 100)} de la capacité hôte`
+                                    : 'Cumul par projet'
+                            }
+                        />
+                    </Grid>
+                </Grid>
+
                 <Card sx={{ px: 2, py: 1.5 }}>
                     <Stack
                         direction={{ xs: 'column', sm: 'row' }}

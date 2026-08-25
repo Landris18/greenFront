@@ -17,6 +17,7 @@ import Typography from '@mui/material/Typography';
 import { alpha } from '@mui/material/styles';
 
 import { ConsumptionHistoryChart } from '../charts/consumption-history-chart';
+import { ProjectBreakdownDonut } from '../charts/project-breakdown-donut';
 import { dashboardService } from 'src/features/dashboard/api/dashboard-service';
 import { projectService } from 'src/features/projects/api/project-service';
 import { EmptyContent } from 'src/shared/components/empty-content/empty-content';
@@ -33,11 +34,6 @@ const PERIODES = [
     { value: 168, label: '7 jours', court: '7 j', granularity: 'day' as Granularity },
     { value: 720, label: '30 jours', court: '30 j', granularity: 'day' as Granularity },
 ];
-
-const OVERHEAD_EXPLICATION =
-    "Part de la consommation de la machine qui n'est imputable à aucun conteneur : puissance à vide, " +
-    "système d'exploitation et processus hors Docker. Elle ne disparaît pas si vous arrêtez un " +
-    'conteneur. La somme des projets et de cette part égale exactement la puissance mesurée.';
 
 const COULEUR_SEVERITE: Record<Severity, string> = {
     CRITICAL: accents.saturation.main,
@@ -166,8 +162,6 @@ export function DashboardView() {
     const puissance = formatWatts(synthese.puissance);
     const gain = formatEnergy(economie);
     const partOverhead = overhead?.energy_kwh ?? 0;
-    const totalRepartition =
-        repartition.reduce((somme, item) => somme + item.energy_kwh, 0) + partOverhead || 1;
     const evolution = variation(totaux?.energy_kwh, precedents?.energy_kwh);
 
     if (!projetsEnCours && (projets ?? []).length === 0) {
@@ -270,7 +264,6 @@ export function DashboardView() {
                         onClick={() => navigate('/optimiser')}
                     />
                 </Grid>
-
                 <Grid size={{ xs: 12, lg: 8 }}>
                     <ConsumptionHistoryChart
                         series={historique}
@@ -282,6 +275,14 @@ export function DashboardView() {
                 </Grid>
 
                 <Grid size={{ xs: 12, lg: 4 }}>
+                    <ProjectBreakdownDonut
+                        repartition={repartition}
+                        overhead={partOverhead}
+                        subtitle="Part attribuée à chaque projet, et part non imputable"
+                    />
+                </Grid>
+
+                <Grid size={{ xs: 12, lg: 5 }}>
                     <SectionCard
                         title="Priorités"
                         subtitle={`${synthese.critiques} recommandation(s) prioritaire(s)`}
@@ -374,154 +375,6 @@ export function DashboardView() {
                                         </Stack>
                                     );
                                 })}
-                            </Stack>
-                        )}
-                    </SectionCard>
-                </Grid>
-
-                <Grid size={{ xs: 12, lg: 5 }}>
-                    <SectionCard
-                        title="Répartition par projet"
-                        subtitle="Part attribuée à chaque projet, et part non imputable"
-                    >
-                        {repartition.length === 0 ? (
-                            <EmptyContent
-                                title="Aucune consommation attribuée"
-                                description="Aucune mesure sur la période sélectionnée."
-                                height={200}
-                            />
-                        ) : (
-                            <Stack spacing={2.25}>
-                                {repartition.map((item, index) => {
-                                    const valeur = formatEnergy(item.energy_kwh);
-                                    const part = (item.energy_kwh / totalRepartition) * 100;
-                                    const couleur = chartPalette[index % chartPalette.length];
-
-                                    return (
-                                        <Box key={item.entity_id}>
-                                            <Stack
-                                                direction="row"
-                                                spacing={1}
-                                                sx={{ alignItems: 'center', mb: 0.75 }}
-                                            >
-                                                <Box
-                                                    sx={{
-                                                        width: 9,
-                                                        height: 9,
-                                                        borderRadius: '50%',
-                                                        backgroundColor: couleur,
-                                                        flexShrink: 0,
-                                                    }}
-                                                />
-                                                <Typography
-                                                    variant="subtitle2"
-                                                    noWrap
-                                                    sx={{ flexGrow: 1 }}
-                                                >
-                                                    {item.label}
-                                                </Typography>
-                                                <Typography variant="subtitle2">
-                                                    {valeur.value} {valeur.unit}
-                                                </Typography>
-                                                <Typography
-                                                    variant="caption"
-                                                    color="text.secondary"
-                                                    sx={{ width: 42, textAlign: 'right' }}
-                                                >
-                                                    {part.toFixed(0)} %
-                                                </Typography>
-                                            </Stack>
-                                            <Box
-                                                sx={{
-                                                    height: 7,
-                                                    borderRadius: 4,
-                                                    backgroundColor: 'grey.100',
-                                                    overflow: 'hidden',
-                                                }}
-                                            >
-                                                <Box
-                                                    sx={{
-                                                        width: `${part}%`,
-                                                        height: 1,
-                                                        borderRadius: 4,
-                                                        backgroundColor: couleur,
-                                                    }}
-                                                />
-                                            </Box>
-                                        </Box>
-                                    );
-                                })}
-
-                                <Box>
-                                    <Stack
-                                        direction="row"
-                                        spacing={1}
-                                        sx={{ alignItems: 'center', mb: 0.75 }}
-                                    >
-                                        <Box
-                                            sx={{
-                                                width: 9,
-                                                height: 9,
-                                                borderRadius: '50%',
-                                                backgroundColor: accents.overhead.main,
-                                                flexShrink: 0,
-                                            }}
-                                        />
-                                        <Tooltip title={OVERHEAD_EXPLICATION}>
-                                            <Stack
-                                                direction="row"
-                                                spacing={0.5}
-                                                sx={{
-                                                    alignItems: 'center',
-                                                    flexGrow: 1,
-                                                    minWidth: 0,
-                                                    cursor: 'help',
-                                                }}
-                                            >
-                                                <Typography
-                                                    variant="subtitle2"
-                                                    noWrap
-                                                    sx={{ color: 'text.secondary' }}
-                                                >
-                                                    Overhead infrastructure
-                                                </Typography>
-                                                <Icon
-                                                    icon="solar:question-circle-linear"
-                                                    width={14}
-                                                    color={accents.overhead.main}
-                                                />
-                                            </Stack>
-                                        </Tooltip>
-                                        <Typography variant="subtitle2" color="text.secondary">
-                                            {formatEnergy(partOverhead).value}{' '}
-                                            {formatEnergy(partOverhead).unit}
-                                        </Typography>
-                                        <Typography
-                                            variant="caption"
-                                            color="text.secondary"
-                                            sx={{ width: 42, textAlign: 'right' }}
-                                        >
-                                            {((partOverhead / totalRepartition) * 100).toFixed(0)} %
-                                        </Typography>
-                                    </Stack>
-                                    <Box
-                                        sx={{
-                                            height: 7,
-                                            borderRadius: 4,
-                                            backgroundColor: 'grey.100',
-                                            overflow: 'hidden',
-                                        }}
-                                    >
-                                        <Box
-                                            sx={{
-                                                width: `${(partOverhead / totalRepartition) * 100}%`,
-                                                height: 1,
-                                                borderRadius: 4,
-                                                backgroundColor: accents.overhead.main,
-                                            }}
-                                        />
-                                    </Box>
-                                </Box>
                             </Stack>
                         )}
                     </SectionCard>
