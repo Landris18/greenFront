@@ -121,7 +121,7 @@ export function KpiCard({
                 overflow: 'hidden',
                 px: 2.5,
                 pt: 2.5,
-                pb: avecCourbe ? 5.5 : 2.5,
+                pb: avecCourbe ? 7.5 : 2.5,
                 transition: 'transform 160ms, background-color 160ms, border-color 160ms',
                 ...(onClick && {
                     cursor: 'pointer',
